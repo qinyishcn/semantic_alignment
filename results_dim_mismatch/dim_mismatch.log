@@ -1,0 +1,62 @@
+2026-05-25 19:47:09,741 [INFO] ======================================================================
+2026-05-25 19:47:09,741 [INFO] Dimension Mismatch Experiment
+2026-05-25 19:47:09,741 [INFO] Device: cuda
+2026-05-25 19:47:09,741 [INFO] Model A latent_dim: 32 | Model C latent_dim: 64
+2026-05-25 19:47:09,741 [INFO] ======================================================================
+2026-05-25 19:47:09,741 [INFO] Loading MNIST dataset...
+2026-05-25 19:47:09,821 [INFO] Train: 60000 samples, Test: 10000 samples
+2026-05-25 19:47:09,821 [INFO] 
+──────────────────────────────────────────────────
+2026-05-25 19:47:09,821 [INFO] Loading pre-trained Model A (latent_dim=32)
+2026-05-25 19:47:09,821 [INFO] ──────────────────────────────────────────────────
+2026-05-25 19:47:09,920 [INFO] Evaluating Model A (original)...
+2026-05-25 19:47:12,113 [INFO] [Model_A_original] Accuracy: 98.41% | Loss: 0.0644
+2026-05-25 19:47:12,113 [INFO] 
+──────────────────────────────────────────────────
+2026-05-25 19:47:12,114 [INFO] Training Model C (latent_dim=64)
+2026-05-25 19:47:12,114 [INFO] ──────────────────────────────────────────────────
+2026-05-25 19:47:27,141 [INFO] [Model_C] Epoch 1/10 | Train Loss: 0.5329 | Test Loss: 0.1745 | Accuracy: 94.65% | Time: 12.9s
+2026-05-25 19:47:42,304 [INFO] [Model_C] Epoch 2/10 | Train Loss: 0.1851 | Test Loss: 0.1182 | Accuracy: 96.32% | Time: 13.2s
+2026-05-25 19:47:57,335 [INFO] [Model_C] Epoch 3/10 | Train Loss: 0.1319 | Test Loss: 0.1034 | Accuracy: 96.74% | Time: 13.0s
+2026-05-25 19:48:12,470 [INFO] [Model_C] Epoch 4/10 | Train Loss: 0.1089 | Test Loss: 0.0857 | Accuracy: 97.63% | Time: 13.1s
+2026-05-25 19:48:27,459 [INFO] [Model_C] Epoch 5/10 | Train Loss: 0.0960 | Test Loss: 0.0793 | Accuracy: 97.76% | Time: 13.0s
+2026-05-25 19:48:42,438 [INFO] [Model_C] Epoch 6/10 | Train Loss: 0.0661 | Test Loss: 0.0688 | Accuracy: 98.04% | Time: 12.9s
+2026-05-25 19:48:57,625 [INFO] [Model_C] Epoch 7/10 | Train Loss: 0.0607 | Test Loss: 0.0643 | Accuracy: 98.13% | Time: 13.2s
+2026-05-25 19:49:12,584 [INFO] [Model_C] Epoch 8/10 | Train Loss: 0.0534 | Test Loss: 0.0674 | Accuracy: 98.07% | Time: 12.9s
+2026-05-25 19:49:27,804 [INFO] [Model_C] Epoch 9/10 | Train Loss: 0.0492 | Test Loss: 0.0673 | Accuracy: 98.11% | Time: 13.2s
+2026-05-25 19:49:42,855 [INFO] [Model_C] Epoch 10/10 | Train Loss: 0.0438 | Test Loss: 0.0637 | Accuracy: 98.24% | Time: 13.0s
+2026-05-25 19:49:42,855 [INFO] Evaluating Model C (original)...
+2026-05-25 19:49:44,827 [INFO] [Model_C_original] Accuracy: 98.24% | Loss: 0.0637
+2026-05-25 19:49:44,827 [INFO] 
+──────────────────────────────────────────────────
+2026-05-25 19:49:44,827 [INFO] EXPERIMENT 1: Direct concatenation (A_encoder + C_decoder)
+2026-05-25 19:49:44,827 [INFO] ──────────────────────────────────────────────────
+2026-05-25 19:49:44,888 [ERROR] EXPECTED ERROR: mat1 and mat2 shapes cannot be multiplied (256x32 and 64x128)
+2026-05-25 19:49:44,937 [ERROR] EXPECTED ERROR: mat1 and mat2 shapes cannot be multiplied (256x64 and 32x128)
+2026-05-25 19:49:44,937 [INFO] 
+──────────────────────────────────────────────────
+2026-05-25 19:49:44,937 [INFO] EXPERIMENT 2: Zero-padding approach
+2026-05-25 19:49:44,937 [INFO] ──────────────────────────────────────────────────
+2026-05-25 19:49:44,937 [INFO] A_encoder(32) + C_decoder(64): zero-pad 32→64
+2026-05-25 19:49:46,963 [INFO] [A_enc+C_dec_PAD] Accuracy: 24.62% | Loss: 4.0135
+2026-05-25 19:49:46,963 [INFO] C_encoder(64) + A_decoder(32): truncate 64→32
+2026-05-25 19:49:48,955 [INFO] [C_enc+A_dec_TRUNCATE] Accuracy: 5.74% | Loss: 4.3083
+2026-05-25 19:49:48,955 [INFO] 
+──────────────────────────────────────────────────
+2026-05-25 19:49:48,955 [INFO] EXPERIMENT 3: Truncation approach
+2026-05-25 19:49:48,955 [INFO] ──────────────────────────────────────────────────
+2026-05-25 19:49:48,955 [INFO] 
+======================================================================
+2026-05-25 19:49:48,955 [INFO] DIMENSION MISMATCH EXPERIMENT SUMMARY
+2026-05-25 19:49:48,955 [INFO] ======================================================================
+2026-05-25 19:49:48,955 [INFO] Model A (dim=32) accuracy:     98.41%
+2026-05-25 19:49:48,955 [INFO] Model C (dim=64) accuracy:     98.24%
+2026-05-25 19:49:48,955 [INFO] 
+2026-05-25 19:49:48,955 [INFO] Direct concat A_enc+C_dec:  ERROR — mat1 and mat2 shapes cannot be multiplied (256x32 and 64x128)
+2026-05-25 19:49:48,955 [INFO] Direct concat C_enc+A_dec:  ERROR — mat1 and mat2 shapes cannot be multiplied (256x64 and 32x128)
+2026-05-25 19:49:48,955 [INFO] 
+2026-05-25 19:49:48,955 [INFO] Zero-pad A_enc(32→64)+C_dec:   24.62%
+2026-05-25 19:49:48,955 [INFO] Truncate C_enc(64→32)+A_dec:   5.74%
+2026-05-25 19:49:48,955 [INFO] ======================================================================
+2026-05-25 19:49:48,955 [INFO] 
+Results saved to: C:\Users\qinyi\.openclaw\workspace\semantic_alignment\results_dim_mismatch

@@ -32,17 +32,21 @@ Input (784) ──► Encoder ──► Latent (32) ──► Decoder ──► 
 
 ```
 semantic_alignment/
-├── model.py          # 网络架构定义（Encoder, Decoder, AutoencoderClassifier, CrossModel）
-├── train.py          # 训练和评估管道
-├── visualize.py      # 结果可视化
-├── requirements.txt  # 依赖
-├── README.md         # 项目说明
-└── results/          # 训练结果（运行后生成）
-    ├── training_log.json   # 完整训练日志
-    ├── run.log             # 控制台输出日志
-    ├── model_a.pth         # Model A 权重
-    ├── model_b.pth         # Model B 权重
-    └── plots/              # 可视化图表
+├── model.py                  # 网络架构定义
+├── train.py                  # 实验一：同维度交叉拼接
+├── train_dim_mismatch.py     # 实验二：异维度拼接 + 修复
+├── visualize.py              # 结果可视化
+├── requirements.txt          # 依赖
+├── README.md                 # 项目说明
+├── results/                  # 实验一结果
+│   ├── training_log.json
+│   ├── run.log
+│   ├── model_a.pth
+│   ├── model_b.pth
+│   └── plots/
+└── results_dim_mismatch/     # 实验二结果
+    ├── dim_mismatch_log.json
+    └── dim_mismatch.log
 ```
 
 ## 快速开始
@@ -51,8 +55,11 @@ semantic_alignment/
 # 安装依赖
 pip install -r requirements.txt
 
-# 运行实验
+# 实验一：同维度交叉拼接
 python train.py
+
+# 实验二：异维度拼接 + 修复
+python train_dim_mismatch.py
 
 # 生成可视化图表
 python visualize.py
@@ -75,28 +82,74 @@ python visualize.py
 - 交叉拼接模型：显著性能退化（预计降至 ~10-30%）
 - 两个模型的 latent space 统计特征存在明显差异
 
-## 论证逻辑
+## 实验一：同维度交叉拼接
+
+### 论证逻辑
 
 ```
                 Model A (trained)              Model B (trained)
                ┌──────────────┐              ┌──────────────┐
   Input ──►    │  Encoder_A   │              │  Encoder_B   │
                └──────┬───────┘              └──────┬───────┘
-                      │ z_A                          │ z_B
+                      │ z_A (32-dim)                 │ z_B (32-dim)
                ┌──────┴───────┐              ┌──────┴───────┐
                │  Decoder_A   │              │  Decoder_B   │
                └──────────────┘              └──────────────┘
                       │                          │
-                 ~97-98% acc                 ~97-98% acc
+                 ~98% acc                    ~98% acc
 
 Cross (A_enc + B_dec):
 
   Input ──►  Encoder_A  ──► z_A  ──►  Decoder_B  ──►  ???
                                               │
-                                     ~10-30% acc (退化)
+                                     ~5-7% acc (严重退化)
 
 结论：Decoder_B 期望接收的 z_B 与 Encoder_A 产生的 z_A 语义不匹配
 → 模型对齐是必要的
+```
+
+### 结果
+
+| 配置 | 准确率 | 准确率下降 |
+|------|--------|-----------|
+| Model A (原始) | 98.09% | — |
+| Model B (原始) | 98.17% | — |
+| A_encoder + B_decoder | 5.28% | -92.81% |
+| B_encoder + A_decoder | 7.47% | -90.70% |
+
+潜空间分析：cosine similarity = 0.77，L2 distance = 5.43
+
+---
+
+## 实验二：异维度拼接
+
+当两个模型的 latent dimension 不同时（Model A: 32, Model C: 64），直接拼接会报错。
+
+### 直接拼接 → 报错
+
+```
+A_encoder(32) + C_decoder(64):
+  RuntimeError: mat1 and mat2 shapes cannot be multiplied (256x32 and 64x128)
+
+C_encoder(64) + A_decoder(32):
+  RuntimeError: mat1 and mat2 shapes cannot be multiplied (256x64 and 32x128)
+```
+
+### 修复方案
+
+| 方法 | 说明 | 准确率 |
+|------|------|--------|
+| Zero-padding | A_enc(32) → 补零至 64 → C_dec | 24.62% |
+| Truncation | C_enc(64) → 截断至 32 → A_dec | 5.74% |
+
+### 结论
+
+1. **维度不匹配直接报错**：矩阵乘法维度冲突，完全无法运行
+2. **Zero-padding**：将小维度补零扩大，能运行但语义信息稀释，准确率大幅下降
+3. **Truncation**：将大维度截断，丢失信息，准确率崩溃
+4. **两种修复都不理想**：即使能跑，性能也远低于原始模型
+
+→ **模型对齐不仅要求语义对齐，还要求维度对齐**
 ```
 
 ## License
